@@ -8,6 +8,7 @@ const adminRouter = require("./routes/adminRouter");
 const authRouter = require("./routes/authRouter");
 const accountsRouter = require("./routes/accountsRouter");
 const groupsRouter = require("./routes/groupsRouter");
+const pendingsRouter = require("./routes/pendingsRouter");
 
 var app = express();
 require("dotenv").config();
@@ -26,6 +27,7 @@ app.use("/api/admin", adminRouter);
 app.use("/api/auth", authRouter);
 app.use("/accounts", accountsRouter);
 app.use("/groups", groupsRouter);
+app.use("/pendings", pendingsRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
