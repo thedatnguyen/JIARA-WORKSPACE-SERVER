@@ -7,7 +7,7 @@ module.exports.getPendings = async (req, res, next) => {
         if (res.locals.role !== 'admin') {
             return sendResponse(401, { status: 'failed', message: 'access denied' }, res);
         }
-        let pendingsRef = await db.collection('pendings').get();
+        let pendingsRef = await db.collection('pendings').where("verify", "==", true).get();
         let data = [];
         pendingsRef.forEach(pendingRef => {
             data.push(pendingRef.data());

@@ -34,7 +34,7 @@ module.exports.login = async (req, res, next) => {
         role: accountData.role,
       },
       process.env.TOKEN_SECRET,
-      { expiresIn: 60 * 60 * 24 });
+      { expiresIn: 60 * 60 * 24 }); // 24 hours
     res.header("auth-token", token).status(200).send({
       status: "success",
       data: accountData,
