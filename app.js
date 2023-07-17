@@ -9,7 +9,7 @@ const authRouter = require("./routes/authRouter");
 const accountsRouter = require("./routes/accountsRouter");
 const groupsRouter = require("./routes/groupsRouter");
 const pendingsRouter = require("./routes/pendingsRouter");
-//const messagesController = require("./routes/messagesRouter");
+const chatsController = require("./routes/chatsRouter");
 
 var app = express();
 require("dotenv").config();
@@ -29,7 +29,7 @@ app.use("/api/auth", authRouter);
 app.use("/accounts", accountsRouter);
 app.use("/groups", groupsRouter);
 app.use("/pendings", pendingsRouter);
-//app.use("/messages", messagesController);
+//app.use("/chats", chatsController);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

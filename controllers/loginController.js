@@ -14,11 +14,7 @@ module.exports.login = async (req, res, next) => {
       .data();
 
     if (!accountData) {
-      return sendResponse(422, {
-        status: "failed",
-        message: "username not existed",
-      },
-        res);
+      return sendResponse(422, { status: "failed", message: "username not existed" }, res);
     }
     if (! await bcrypt.compare(password, accountData.hashedPassword)) {
       return sendResponse(422, {
@@ -32,6 +28,7 @@ module.exports.login = async (req, res, next) => {
       {
         username: accountData.username,
         role: accountData.role,
+        chatAccountId: accountData.chatAccountId
       },
       process.env.TOKEN_SECRET,
       { expiresIn: 60 * 60 * 24 }); // 24 hours
@@ -41,7 +38,7 @@ module.exports.login = async (req, res, next) => {
       token: token,
     });
     //console.log(res._header);
-    
+
   } catch (error) {
     sendResponse(500, {
       status: "failed",

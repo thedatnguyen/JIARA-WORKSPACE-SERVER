@@ -12,8 +12,7 @@ module.exports = async (req, res, next) => {
 
   try {
     jwt.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
-      res.locals.username = decoded.username;
-      res.locals.role = decoded.role;
+      res.locals = decoded;
     });
     next();
   } catch (error) {

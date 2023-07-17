@@ -1,5 +1,6 @@
 const { db } = require('../configs/firebase');
 const sendResponse = (statusCode, data, res) => res.status(statusCode).send(data);
+const weavy = require('../weavy');
 
 module.exports.getPendings = async (req, res, next) => {
     try {
@@ -21,7 +22,7 @@ module.exports.getPendings = async (req, res, next) => {
 module.exports.approvePending = async (req, res, next) => {
     try {
         if (res.locals.role !== 'admin') {
-            return sendResponse(401, { status: 'failed', message: 'access denied' }, res);
+            return sendResponse(401, { status: 'failed', message: 'admin role required' }, res);
         }
         const { username } = req.body;
         let pendingRef = await db.collection('pendings').doc(username).get();
@@ -31,6 +32,14 @@ module.exports.approvePending = async (req, res, next) => {
         }
 
         const { firstname, lastname, avatar, phoneNumber, email, gender, hashedPassword } = pending
+
+        // create chat account for user
+        let chatAccountId;
+        await weavy.createUser(username)
+            .then(weavyResponse => {
+                chatAccountId = weavyResponse.data.id;
+            })
+
         const accountData = {
             username,
             firstname,
@@ -42,13 +51,14 @@ module.exports.approvePending = async (req, res, next) => {
             hashedPassword,
             role: "user",
             isActive: true,
-            groupIds: []
+            groupIds: [],
+            chatAccountId: chatAccountId,
         };
         await Promise.all([
             db.collection('accounts').doc(username).set(accountData),
             db.collection('pendings').doc(username).delete()
         ])
-            .then(() => sendResponse(200, { status: 'success', data: `${pending.username} approved` }, res))
+            .then(() => sendResponse(200, { status: 'success', data: `${pending.username} approved`}, res))
             .catch(err => sendResponse(500, { status: 'failed', message: err.message }, res));
     } catch (error) {
         sendResponse(500, { status: 'failed', message: error.message }, res);
