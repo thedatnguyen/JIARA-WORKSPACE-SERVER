@@ -9,7 +9,7 @@ const authRouter = require("./routes/authRouter");
 const accountsRouter = require("./routes/accountsRouter");
 const groupsRouter = require("./routes/groupsRouter");
 const pendingsRouter = require("./routes/pendingsRouter");
-const chatsController = require("./routes/chatsRouter");
+//const chatsController = require("./routes/chatsRouter");
 
 var app = express();
 require("dotenv").config();
