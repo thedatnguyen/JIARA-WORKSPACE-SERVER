@@ -16,7 +16,7 @@ module.exports.createUser = async (username) => {
 // if user does not exits then create new
 module.exports.provideChatTokenForUser = async (username) => {
     // create user with uid {username}
-    const url = `${process.env.WAEVY_BASE_URL}/api/users / ${username} /tokens`;
+    const url = `${process.env.WAEVY_BASE_URL}/api/users/${username}/tokens`;
     const body = { name: username, expires_in: 24 * 24 * 60 * 30 }; // 1 month
     const configs = {
         headers: {
@@ -69,8 +69,24 @@ module.exports.addUsersToChat = async (usernames, chatId) => {
     return await axios.post(url, body, configs);
 }
 
-module.exports.getLastMessage = async (chatId) => {
-    const url = `${process.env.WAEVY_BASE_URL}/api/apps/${chatId}/members`;
+module.exports.getLastMessage = (chatId) => {
+    let result = {};
+    const url = `${process.env.WAEVY_BASE_URL}/api/apps/${chatId}/messages`;
+    const configs = {
+        headers: {
+            'content-type': 'application/json',
+            'Authorization': process.env.WEAVY_TOKEN_FACTORY
+        }
+    }
+    axios.get(url, configs)
+        .then(apiResponse => {
+            const messagesCount = apiResponse.data.count;
+            result.lastMessage = apiResponse.data.data[messagesCount - 1].text;
+        })
+        .catch(err => {
+            result.err = err.message;
+        })
+    return result;
 }
 
 

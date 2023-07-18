@@ -3,13 +3,14 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var cors = require('cors');
 
 const adminRouter = require("./routes/adminRouter");
 const authRouter = require("./routes/authRouter");
 const accountsRouter = require("./routes/accountsRouter");
 const groupsRouter = require("./routes/groupsRouter");
 const pendingsRouter = require("./routes/pendingsRouter");
-//const chatsController = require("./routes/chatsRouter");
+//const chatsRouter = require("./routes/chatsRouter");
 
 var app = express();
 require("dotenv").config();
@@ -23,13 +24,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors());
 
 app.use("/api/admin", adminRouter);
 app.use("/api/auth", authRouter);
 app.use("/accounts", accountsRouter);
 app.use("/groups", groupsRouter);
 app.use("/pendings", pendingsRouter);
-//app.use("/chats", chatsController);
+//app.use("/chats", chatsRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
