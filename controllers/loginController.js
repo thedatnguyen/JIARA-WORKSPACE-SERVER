@@ -32,11 +32,12 @@ module.exports.login = async (req, res, next) => {
       username: accountData.username,
       gender: accountData.gender,
       avatar: accountData.avatar,
+      role: accountData.role,
       token: token,
     });
     //console.log(res._header);
 
   } catch (error) {
-    sendResponse(500, { status: "error", message: error.message }, res);
+    sendResponse(500, { message: error.message }, res);
   }
 };
