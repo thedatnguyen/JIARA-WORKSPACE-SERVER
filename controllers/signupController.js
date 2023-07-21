@@ -14,6 +14,7 @@ module.exports.signup = async (req, res, next) => {
       email,
       gender,
       password } = req.body;
+
     const accountsRef = db.collection("accounts");
 
     // check if account data matched rules

@@ -35,6 +35,6 @@ module.exports = async (req, res, next) => {
                 sendResponse(200, { status: 'success', data: 'Email has been sent' }, res);
             })
     } catch (error) {
-        sendResponse(500, { status: 'failed', message: error.message }, res);
+        return sendResponse(500, { status: 'failed', message: error.message }, res);
     }
 }

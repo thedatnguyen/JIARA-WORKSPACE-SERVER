@@ -14,14 +14,10 @@ module.exports.login = async (req, res, next) => {
       .data();
 
     if (!accountData) {
-      return sendResponse(422, { status: "failed", message: "username not existed" }, res);
+      return sendResponse(422, { message: "username not existed" }, res);
     }
     if (! await bcrypt.compare(password, accountData.hashedPassword)) {
-      return sendResponse(422, {
-        status: "failed",
-        message: "password incorrect",
-      },
-        res);
+      return sendResponse(422, { message: "password incorrect" }, res);
     }
 
     const token = jwt.sign(
@@ -33,17 +29,14 @@ module.exports.login = async (req, res, next) => {
       process.env.TOKEN_SECRET,
       { expiresIn: 60 * 60 * 24 }); // 24 hours
     res.header("auth-token", token).status(200).send({
-      status: "success",
-      data: accountData,
+      username: accountData.username,
+      gender: accountData.gender,
+      avatar: accountData.avatar,
       token: token,
     });
     //console.log(res._header);
 
   } catch (error) {
-    sendResponse(500, {
-      status: "failed",
-      message: error.message,
-    },
-      res);
+    sendResponse(500, { status: "error", message: error.message }, res);
   }
 };

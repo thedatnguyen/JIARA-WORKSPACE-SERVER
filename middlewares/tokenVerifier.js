@@ -1,17 +1,18 @@
 const jwt = require("jsonwebtoken");
 
 module.exports = async (req, res, next) => {
-  const token = req.header("authToken");
-  //console.log('authToken', token);
-  if (!token) { // token is missing
-    return res.status(401).send({
-      status: "failed",
-      message: "Access denied",
-    });
-  }
-
   try {
+    const token = req.header("authToken");
+    if (!token) { // token is missing
+      return res.status(401).send({
+        status: "failed",
+        message: "Access denied",
+      });
+    }
     jwt.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
+      if (decoded === undefined) {
+        return res.status(401).send({ message: 'token is expired, login again' });
+      }
       res.locals = decoded;
     });
     next();
@@ -21,4 +22,5 @@ module.exports = async (req, res, next) => {
       message: "invalid token",
     });
   }
-};
+}
+

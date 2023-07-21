@@ -11,9 +11,17 @@ module.exports = async (req, res, next) => {
             return res.status(400).send({ status: 'failed', message: 'groupId not found' });
         }
 
-        const usernames = groupData.usernames;
-        if (!usernames.includes(username)) {
-            return res.status(401).send({ status: 'failed', message: 'access denied' });
+        const members = groupData.usernames;
+        const managers = groupData.managers;
+
+        if(managers.includes(username)){
+            res.locals.groupRole = 'manager';
+        }else{
+            if(members.includes(username)){
+                res.locals.groupRole = 'member'
+            }else {
+                return res.status(401).send({ message: 'access denied' });
+            }
         }
         res.locals.groupData = groupData;
         next();
