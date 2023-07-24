@@ -16,6 +16,7 @@ router.route("/:groupId")
 
 router.route("/:groupId/managers/:managerId")
     .post(tokenVerifier, groupController.addManager) 
+    .patch(tokenVerifier, groupController.removeManager)
 
 router.route("/:groupId/members")
     .post(tokenVerifier, groupController.addMembersToGroup) 

@@ -10,27 +10,40 @@ const checkDuplicateAndAdd = (arr, ele) => {
 }
 
 const checkAndRemove = (arr, removeArr, except) => {
+    if(!Array.isArray(removeArr)){
+        removeArr = [removeArr];
+    }
     return arr.filter(item => !removeArr.includes(item) || item === except);
 }
 
 // groups
 module.exports.getUserGroup = async (req, res, next) => {
     try {
-        const username = res.locals.username;
-        const accountRef = await db.collection("accounts").doc(username).get();
-        const { groupIds } = accountRef.data();
-        let data = []
-        await Promise.all(
-            groupIds.map(async groupId => {
-                const groupRef = await db.collection("groups").doc(groupId).get();
-                const groupData = groupRef.data();
-                data.push({
-                    groupId: groupData.groupId,
-                    groupName: groupData.groupName,
-                    numberOfPosts: groupData.postIds.length
+        const { username, role } = res.locals;
+
+        let data = [];
+
+        if (role === "admin") {
+            const groupsRef = db.collection("groups");
+            const snapshot = await groupsRef.get();
+            snapshot.forEach(element => {
+                data.push(element.data());
+            });
+        } else {
+            const accountRef = await db.collection("accounts").doc(username).get();
+            const { groupIds } = accountRef.data();
+            await Promise.all(
+                groupIds.map(async groupId => {
+                    const groupRef = await db.collection("groups").doc(groupId).get();
+                    const groupData = groupRef.data();
+                    data.push({
+                        groupId: groupData.groupId,
+                        groupName: groupData.groupName,
+                        numberOfPosts: groupData.postIds.length
+                    })
                 })
-            })
-        );
+            );
+        }
         sendResponse(200, { groups: data }, res);
     } catch (error) {
         sendResponse(500, { message: error.message }, res);
@@ -80,7 +93,7 @@ module.exports.updateGroup = async (req, res, next) => {
 // groups:groupId
 module.exports.getGroupData = async (req, res, next) => {
     try {
-        const { postIds, managers } = res.locals.groupData;
+        const { postIds, managers, groupId, groupName, usernames } = res.locals.groupData;
         let posts = []
         await Promise.all(
             postIds.map(async postId => {
@@ -89,7 +102,7 @@ module.exports.getGroupData = async (req, res, next) => {
                 posts.push(postData);
             })
         );
-        sendResponse(200, { managers, posts }, res);
+        sendResponse(200, { managers, posts, groupId, groupName, members: usernames }, res);
     } catch (error) {
         sendResponse(500, { message: error.message }, res);
     }
@@ -135,6 +148,59 @@ module.exports.addManager = async (req, res, next) => {
         sendResponse(500, { message: error.message }, res);
     }
 }
+
+/* NOT TESTED YET */
+
+// groups/:groupId/managers/:managerId
+module.exports.removeManager = async (req, res, next) => {
+    try {
+        const { username, role } = res.locals;
+        const { groupId, managerId } = req.params;
+
+        let groupRef = db.collection('groups').doc(groupId);
+        const groupData = (await groupRef.get()).data();
+        let managers = groupData.managers;
+
+        if (role !== 'admin' && !managers.includes(username)) {
+            return sendResponse(422, { message: 'Admin or manager required' }, res);
+        }
+
+        const managersUpdate = checkAndRemove(managers, managerId);
+
+        await groupRef.update({ managers: managersUpdate});
+        sendResponse(204, {}, res);
+    } catch (error) {
+        sendResponse(500, { message: error.message }, res);
+    }
+}
+
+// groups/:groupId/managers  
+module.exports.addListManagers = async (req, res, next) => {
+    try {
+        const { username, role } = res.locals;
+        const { managerIds } = req.body;
+
+        let groupRef = db.collection('groups').doc(groupId);
+        const groupData = (await groupRef.get()).data();
+        let managers = groupData.managers;
+        let members = groupData.usernames;
+
+        if (role !== 'admin' && !managers.includes(username)) {
+            return sendResponse(422, { message: 'Admin or manager required' }, res);
+        }
+
+        const managersUpdate = checkDuplicateAndAdd(managers, managerIds);
+        const membersUpdate = checkDuplicateAndAdd(members, managerIds);
+
+        await groupRef.update({ managers: managersUpdate, usernames: membersUpdate });
+        sendResponse(204, {}, res);
+    } catch (error) {
+        sendResponse(500, { message: error.message }, res);
+    }
+}
+
+/* NOT TESTED YET */
+
 
 // groups/:groupId/members
 module.exports.addMembersToGroup = async (req, res, next) => {
@@ -330,7 +396,7 @@ module.exports.comment = async (req, res, next) => {
     try {
         const { postId } = req.params;
         const comment = req.body;
-        
+
         // validate comment
         const { commentValidator } = require('../validations/commentValidator');
         const { error } = commentValidator(req.body);

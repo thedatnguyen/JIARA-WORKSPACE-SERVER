@@ -4,19 +4,17 @@ module.exports = async (req, res, next) => {
   try {
     const token = req.header("authToken");
     if (!token) { // token is missing
-      return res.status(401).send({
-        status: "failed",
-        message: "Access denied",
-      });
+      return res.status(401).send({message: 'missing token'});
     }
     jwt.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
-      if (decoded === undefined) {
+      if (!decoded) {
         return res.status(401).send({ message: 'token is expired, login again' });
       }
       res.locals = decoded;
+      next();
     });
-    next();
   } catch (error) {
+    console.log(error.message);
     return res.status(400).send({ //token is invalid
       status: "failed",
       message: "invalid token",
