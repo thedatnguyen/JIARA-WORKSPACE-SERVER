@@ -2,7 +2,7 @@ const { db } = require('../configs/firebase');
 
 module.exports = async (req, res, next) => {
     try {
-        const { username } = res.locals; // token verify success, get username
+        const { username, role } = res.locals; // token verify success, get username
         const { groupId } = req.params;
         const groupRef = await db.collection('groups').doc(groupId).get();
         const groupData = groupRef.data();
@@ -14,13 +14,17 @@ module.exports = async (req, res, next) => {
         const members = groupData.usernames;
         const managers = groupData.managers;
 
-        if(managers.includes(username)){
-            res.locals.groupRole = 'manager';
-        }else{
-            if(members.includes(username)){
-                res.locals.groupRole = 'member'
-            }else {
-                return res.status(401).send({ message: 'access denied' });
+        if (role === 'admin') {
+            res.locals.groupRole = 'admin';
+        } else {
+            if (managers.includes(username)) {
+                res.locals.groupRole = 'manager';
+            } else {
+                if (members.includes(username)) {
+                    res.locals.groupRole = 'member'
+                } else {
+                    return res.status(422).send({ message: 'access denied' });
+                }
             }
         }
         res.locals.groupData = groupData;

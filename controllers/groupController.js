@@ -10,7 +10,7 @@ const checkDuplicateAndAdd = (arr, ele) => {
 }
 
 const checkAndRemove = (arr, removeArr, except) => {
-    if(!Array.isArray(removeArr)){
+    if (!Array.isArray(removeArr)) {
         removeArr = [removeArr];
     }
     return arr.filter(item => !removeArr.includes(item) || item === except);
@@ -36,6 +36,7 @@ module.exports.getUserGroup = async (req, res, next) => {
                 groupIds.map(async groupId => {
                     const groupRef = await db.collection("groups").doc(groupId).get();
                     const groupData = groupRef.data();
+                    if(!groupData) return;
                     data.push({
                         groupId: groupData.groupId,
                         groupName: groupData.groupName,
@@ -54,7 +55,11 @@ module.exports.getUserGroup = async (req, res, next) => {
 module.exports.createNewGroup = async (req, res, next) => {
     try {
         if (res.locals.role !== 'admin') {
-            return sendResponse(401, { message: 'access denied' }, res);
+            return sendResponse(422, { message: 'access denied' }, res);
+        }
+        let { managers } = req.body;
+        if(!Array.isArray(managers)) {
+            managers = [managers];
         }
         let newGroupRef = db.collection('groups').doc();
         const newGroupObj = {
@@ -62,8 +67,8 @@ module.exports.createNewGroup = async (req, res, next) => {
             groupName: req.body.groupName,
             postIds: [],
             usernames: [],
-            managers: req.body.managers || [],
-            usernames: req.body.managers || [],
+            managers: managers || [],
+            usernames: managers || [],
         }
         await newGroupRef.set(newGroupObj);
         sendResponse(200, { data: newGroupObj }, res);
@@ -79,7 +84,7 @@ module.exports.updateGroup = async (req, res, next) => {
         const { groupId } = req.params;
 
         if (role !== 'admin') {
-            return sendResponse(401, { message: 'admin required' }, res);
+            return sendResponse(422, { message: 'admin required' }, res);
         }
         const { managers, groupName } = req.body;
         const groupRef = db.collection('groups').doc(groupId);
@@ -113,7 +118,7 @@ module.exports.deleteGroup = async (req, res, next) => {
     try {
         const { role } = res.locals;
         if (role !== 'admin') {
-            return sendResponse(401, { message: 'admin required' }, res);
+            return sendResponse(422, { message: 'admin required' }, res);
         }
         const { groupId } = req.params;
         const data = await db.collection('groups').doc(groupId).delete();
@@ -167,7 +172,7 @@ module.exports.removeManager = async (req, res, next) => {
 
         const managersUpdate = checkAndRemove(managers, managerId);
 
-        await groupRef.update({ managers: managersUpdate});
+        await groupRef.update({ managers: managersUpdate });
         sendResponse(204, {}, res);
     } catch (error) {
         sendResponse(500, { message: error.message }, res);
@@ -280,7 +285,7 @@ module.exports.createNewPost = async (req, res, next) => {
 
         await Promise.all([
             postRef.set(post),
-            groupRef.update({ postIds: groupPostIds.concat(post.postIds) })
+            groupRef.update({ postIds: groupPostIds.concat(post.postId) })
         ])
 
         sendResponse(200, { message }, res);
@@ -364,7 +369,7 @@ module.exports.deletePost = async (req, res, next) => {
 
         const { username, groupRole } = res.locals;
         if (username !== postData.username && groupRole !== 'manager') {
-            return sendResponse(401, { message: 'author or manager is required' }, res);
+            return sendResponse(422, { message: 'author or manager is required' }, res);
         }
 
         await postRef.delete();
@@ -381,7 +386,7 @@ module.exports.approvePost = async (req, res, next) => {
         const { postId } = req.params;
 
         if (groupRole !== 'manager') {
-            return sendResponse(401, { message: 'manager required' }, res);
+            return sendResponse(422, { message: 'manager required' }, res);
         }
         const postRef = db.collection('posts').doc(postId);
         await postRef.update({ approve: true });

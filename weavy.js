@@ -17,7 +17,7 @@ module.exports.createUser = async (username) => {
 module.exports.provideChatTokenForUser = async (username) => {
     // create user with uid {username}
     const url = `${process.env.WAEVY_BASE_URL}/api/users/${username}/tokens`;
-    const body = { name: username, expires_in: 24 * 24 * 60 * 30 }; // 1 month
+    const body = { expires_in: 24 * 24 * 60 * 30 }; // 1 month
     const configs = {
         headers: {
             'content-type': 'application/json',
@@ -27,31 +27,16 @@ module.exports.provideChatTokenForUser = async (username) => {
     return await axios.post(url, body, configs)
 }
 
-// if chat does not exist then create new
-// module.exports.addUserToChat = async (username, chatId) => {
-//     const url = `${process.env.WAEVY_BASE_URL}/api/apps/init`;
-//     const body = {
-//         app: { uid: chatId, type: "Chat" },
-//         user: { uid: username }
-//     }
-//     const configs = {
-//         headers: {
-//             'content-type': 'application/json',
-//             'Authorization': process.env.WEAVY_TOKEN_FACTORY
-//         }
-//     }
-//     return await axios.post(url, body, configs);
-// }
 
-module.exports.createNewChat = async (chatId) => {
-    const url = `${process.env.WAEVY_BASE_URL}/api/apps/init`;
+module.exports.createNewChat = async (idToChat, accessToken) => {
+    const url = `${process.env.WAEVY_BASE_URL}/api/conversations`;
     const body = {
-        app: { uid: chatId, type: "Chat" },
+        members: [idToChat]
     }
     const configs = {
         headers: {
             'content-type': 'application/json',
-            'Authorization': process.env.WEAVY_TOKEN_FACTORY
+            'Authorization': `Bearer ${accessToken}`
         }
     }
     return await axios.post(url, body, configs);
