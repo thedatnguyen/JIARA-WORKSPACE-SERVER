@@ -4,6 +4,13 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
+var rateLimit = require('express-rate-limit');
+
+const apiLimiter = rateLimit({
+  windowMs: 1000 * 60 * 60 , // 1 hour
+  max: 100,
+  message: 'Too many connection',
+});
 
 const adminRouter = require("./routes/adminRouter");
 const authRouter = require("./routes/authRouter");
@@ -12,6 +19,7 @@ const groupsRouter = require("./routes/groupsRouter");
 const pendingsRouter = require("./routes/pendingsRouter");
 const chatsRouter = require("./routes/chatsRouter");
 //const uploadImageRouter = require("./routes/uploadImageRouter");
+//const dropboxAuthorizeRouter = require("./routes/dropboxAuthorizeRouter");
 
 var app = express();
 require("dotenv").config();
@@ -26,6 +34,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
+app.use(apiLimiter);
+
+
 
 app.use("/api/admin", adminRouter);
 app.use("/api/auth", authRouter);
@@ -33,9 +44,10 @@ app.use("/accounts", accountsRouter);
 app.use("/groups", groupsRouter);
 app.use("/pendings", pendingsRouter);
 app.use("/messages", chatsRouter);
-//app.use("/uploadImage", uploadImageRouter);
 
-//app.use("/test", (req, res) => {res.send("Hello world!")});
+//app.use("/uploadImage", uploadImageRouter);
+//app.use("/", dropboxAuthorizeRouter);
+//app.use("/", (req, res) => {res.send("Hello world!")});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

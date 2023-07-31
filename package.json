@@ -15,6 +15,7 @@
     "dropbox": "^10.34.0",
     "ejs": "~2.6.1",
     "express": "~4.16.1",
+    "express-rate-limit": "^6.8.1",
     "firebase-admin": "^11.9.0",
     "http-errors": "~1.6.3",
     "joi": "^17.9.2",
@@ -22,6 +23,7 @@
     "node-localstorage": "^2.2.1",
     "nodemailer": "^6.9.3",
     "nodemon": "^2.0.22",
-    "socket.io": "^4.7.1"
+    "socket.io": "^4.7.1",
+    "uuid": "^9.0.0"
   }
 }
