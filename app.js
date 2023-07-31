@@ -7,9 +7,11 @@ var cors = require('cors');
 var rateLimit = require('express-rate-limit');
 
 const apiLimiter = rateLimit({
-  windowMs: 1000 * 60 * 60 , // 1 hour
-  max: 100,
-  message: 'Too many connection',
+  windowMs: 1000 * 60 , // 1 hour
+  max: 5,
+  handler: (req, res) => {
+    res.status(429).send({message: "Too many request (limit: 5 per min). Try again after 1 minute."});
+  }
 });
 
 const adminRouter = require("./routes/adminRouter");
