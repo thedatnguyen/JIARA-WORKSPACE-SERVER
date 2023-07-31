@@ -6,7 +6,6 @@ var logger = require('morgan');
 var cors = require('cors');
 var rateLimit = require('express-rate-limit');
 var helmet = require('helmet');
-var xss = require('xss-clean');
 
 const apiLimiter = rateLimit({
   windowMs: 1000 * 60 , // 1 hour
@@ -40,7 +39,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
 app.use(apiLimiter);
 app.use(helmet());
-app.use(xss());
 
 
 
