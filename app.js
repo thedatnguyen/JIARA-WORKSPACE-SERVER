@@ -5,7 +5,6 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
 var rateLimit = require('express-rate-limit');
-var helmet = require('helmet');
 
 const apiLimiter = rateLimit({
   windowMs: 1000 * 60 , // 1 minute
@@ -37,7 +36,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
 app.use(apiLimiter);
-app.use(helmet());
 
 
 
