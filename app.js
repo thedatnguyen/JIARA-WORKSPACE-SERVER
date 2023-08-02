@@ -5,9 +5,10 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
 var rateLimit = require('express-rate-limit');
+var helmet = require('helmet');
 
 const apiLimiter = rateLimit({
-  windowMs: 1000 * 60 , // 1 hour
+  windowMs: 1000 * 60 , // 1 minute
   max: 5,
   handler: (req, res) => {
     res.status(429).send({message: "Too many request (limit: 5 per min). Try again after 1 minute."});
@@ -20,8 +21,7 @@ const accountsRouter = require("./routes/accountsRouter");
 const groupsRouter = require("./routes/groupsRouter");
 const pendingsRouter = require("./routes/pendingsRouter");
 const chatsRouter = require("./routes/chatsRouter");
-//const uploadImageRouter = require("./routes/uploadImageRouter");
-//const dropboxAuthorizeRouter = require("./routes/dropboxAuthorizeRouter");
+//const personalRouter = require("./routes/personalRouter");
 
 var app = express();
 require("dotenv").config();
@@ -37,6 +37,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
 app.use(apiLimiter);
+app.use(helmet());
 
 
 
@@ -46,10 +47,8 @@ app.use("/accounts", accountsRouter);
 app.use("/groups", groupsRouter);
 app.use("/pendings", pendingsRouter);
 app.use("/messages", chatsRouter);
+//app.use("/personal", require("body-parser").raw(), personalRouter);
 
-//app.use("/uploadImage", uploadImageRouter);
-//app.use("/", dropboxAuthorizeRouter);
-//app.use("/", (req, res) => {res.send("Hello world!")});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

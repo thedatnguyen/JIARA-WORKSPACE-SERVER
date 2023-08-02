@@ -3,6 +3,8 @@ node_modules
 README.md
 routes/uploadImageRouter.js
 routes/dropboxAuthorizeRouter.js
+routes/personalRouter.js
 controllers/uploadImageController.js
 controllers/dropboxAuthorizeController.js
+controllers/personalController.js
 public

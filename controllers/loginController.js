@@ -1,6 +1,7 @@
 const { db } = require("../configs/firebase");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const dropbox = require("../dropbox");
 
 const sendResponse = (statusCode, body, res) => {
   res.status(statusCode).send(body);
@@ -20,6 +21,7 @@ module.exports.login = async (req, res, next) => {
       return sendResponse(422, { message: "password incorrect" }, res);
     }
 
+    // sign token
     const token = jwt.sign(
       {
         username: accountData.username,
@@ -28,11 +30,26 @@ module.exports.login = async (req, res, next) => {
       },
       process.env.TOKEN_SECRET,
       { expiresIn: 60 * 60 * 24 }); // 24 hours
+
+    // load avatar from dropbox
+    let base64data;
+    await dropbox.loadImageFromId(accountData.avatar)
+      .then(async dropboxRes => {
+        const binary = dropboxRes.result.fileBinary;
+        base64data = Buffer.from(binary, 'binary').toString('base64');
+      })
+
+
     res.header("auth-token", token).status(200).send({
       username: accountData.username,
       gender: accountData.gender,
-      avatar: accountData.avatar,
+      avatar: base64data,
       role: accountData.role,
+      firstname: accountData.firstname,
+      lastname: accountData.lastname,
+      email: accountData.email,
+      gender: accountData.gender,
+      phoneNumber: accountData.phoneNumber,
       token: token,
     });
     //console.log(res._header);

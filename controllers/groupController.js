@@ -36,7 +36,7 @@ module.exports.getUserGroup = async (req, res, next) => {
                 groupIds.map(async groupId => {
                     const groupRef = await db.collection("groups").doc(groupId).get();
                     const groupData = groupRef.data();
-                    if(!groupData) return;
+                    if (!groupData) return;
                     data.push({
                         groupId: groupData.groupId,
                         groupName: groupData.groupName,
@@ -58,7 +58,7 @@ module.exports.createNewGroup = async (req, res, next) => {
             return sendResponse(422, { message: 'access denied' }, res);
         }
         let { managers } = req.body;
-        if(!Array.isArray(managers)) {
+        if (!Array.isArray(managers)) {
             managers = [managers];
         }
         let newGroupRef = db.collection('groups').doc();
@@ -104,7 +104,9 @@ module.exports.getGroupData = async (req, res, next) => {
             postIds.map(async postId => {
                 const postRef = await db.collection('posts').doc(postId).get();
                 const postData = postRef.data();
-                posts.push(postData);
+                if (postData) {
+                    posts.push(postData)
+                }
             })
         );
         sendResponse(200, { managers, posts, groupId, groupName, members: usernames }, res);
