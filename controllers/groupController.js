@@ -377,7 +377,7 @@ module.exports.deletePost = async (req, res, next) => {
         await postRef.delete();
 
         const groupRef = db.collection('groups').doc(groupId);
-        const postIds = await (groupRef.get()).data().postIds;
+        const postIds = (await groupRef.get()).data().postIds;
         const postIdsUpdate = checkAndRemove(postIds, [postId], undefined);
         groupRef.update({ postIds: postIdsUpdate });
 
