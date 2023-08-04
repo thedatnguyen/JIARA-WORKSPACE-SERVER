@@ -278,6 +278,7 @@ module.exports.createNewPost = async (req, res, next) => {
         // upload pictures to dropbox
         const postPictureIds = [];
         const { pictures } = post; // receive array of base64 picture
+        console.log(pictures);
         if (!Array.isArray(pictures)) pictures = [pictures]; // convert to array if neccessary
         await Promise.all(
             pictures.map(async picture => {
