@@ -1,5 +1,6 @@
 const axios = require('axios');
 const { Dropbox } = require('dropbox');
+const { v4: uuid } = require('uuid');
 
 module.exports.getRefreshAndAccessToken = async (req, res, next) => {
     try {
@@ -48,6 +49,29 @@ module.exports.loadImageFromId = async (id) => {
     return await dbx.filesDownload({ path: id })
 }
 
-module.exports.updateImage = async (id) => {
-    
+module.exports.updateImage = async (id, content) => {
+    if (!content) return;
+    let dropboxAccessToken;
+    await this.getAccessToken()
+        .then(dropboxRes => dropboxAccessToken = dropboxRes.data.access_token);
+
+    var dbx = new Dropbox({ accessToken: dropboxAccessToken });
+    return await dbx.filesUpload({
+        path: id,
+        contents: content,
+        mode: 'overwrite'
+    })
+}
+
+module.exports.uploadImage = async (content) => {
+    if (!content) return;
+    let dropboxAccessToken;
+    await this.getAccessToken()
+        .then(dropboxRes => dropboxAccessToken = dropboxRes.data.access_token);
+
+    var dbx = new Dropbox({ accessToken: dropboxAccessToken });
+    return await dbx.filesUpload({
+        path: `/avatars/${uuid()}.png`,
+        contents: content
+    })
 }

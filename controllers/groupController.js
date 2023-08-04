@@ -1,4 +1,7 @@
+const fs = require('fs');
+
 const { db } = require("../configs/firebase");
+const dropbox = require('../dropbox');
 
 const sendResponse = (statusCode, body, res) => {
     res.status(statusCode).send(body);
@@ -272,6 +275,20 @@ module.exports.createNewPost = async (req, res, next) => {
             return sendResponse(400, { message: error.details[0].message }, res);
         }
 
+        // upload pictures to dropbox
+        const postPictureIds = [];
+        const { pictures } = post; // receive array of base64 picture
+        if (!Array.isArray(pictures)) pictures = [pictures]; // convert to array if neccessary
+        await Promise.all(
+            pictures.map(async picture => {
+                const imageBuffer = Buffer.from(picture, 'base64');
+                await dropbox.uploadImage(imageBuffer)
+                    .then(dropboxRes => {
+                        postPictureIds.push(dropboxRes.result.id);
+                    })
+            })
+        )
+
         let groupRef = db.collection('groups').doc(groupId);
         const groupData = (await groupRef.get()).data();
 
@@ -280,6 +297,7 @@ module.exports.createNewPost = async (req, res, next) => {
         post.approve = (res.locals.groupRole === 'manager') // if user is manager, approve else not
         post.username = username;
         post.comments = [];
+        post.pictures = postPictureIds;
 
         const message = post.approve ? 'Post created successfully' : 'Post created successfully, waiting for managers to appove...';
 
@@ -304,6 +322,7 @@ module.exports.getPostById = async (req, res, next) => {
         const postRef = db.collection('posts').doc(postId);
         const postData = (await (postRef.get())).data();
 
+        // load comments
         let comments = [];
 
         const commentIds = postData.comments;
@@ -316,6 +335,20 @@ module.exports.getPostById = async (req, res, next) => {
         )
 
         postData.comments = comments;
+
+        // load image
+        let pictures = [];
+        await Promise.all(
+            postData.pictures.map(async pictureId => {
+                await dropbox.loadImageFromId(pictureId)
+                    .then(dropboxRes => {
+                        const binaryPicture = dropboxRes.result.fileBinary;
+                        const base64Image = Buffer.from(binaryPicture, 'binary').toString('base64');
+                        pictures.push(base64Image);
+                    })
+            })
+        )
+        postData.pictures = pictures;
 
         sendResponse(200, { postData }, res);
     } catch (error) {

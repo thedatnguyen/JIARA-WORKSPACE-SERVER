@@ -5,12 +5,13 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
 var rateLimit = require('express-rate-limit');
+var bodyParser = require('body-parser');
 
 const apiLimiter = rateLimit({
-  windowMs: 1000 * 60 , // 1 minute
-  max: 5,
+  windowMs: 1000 * 60 * 5, // 5 minute
+  max: 50,
   handler: (req, res) => {
-    res.status(429).send({message: "Too many request (limit: 5 per min). Try again after 1 minute."});
+    res.status(429).send({ message: "Too many request (limit: 50 per 5 mins). Try again after 5 minutes." });
   }
 });
 
@@ -20,7 +21,7 @@ const accountsRouter = require("./routes/accountsRouter");
 const groupsRouter = require("./routes/groupsRouter");
 const pendingsRouter = require("./routes/pendingsRouter");
 const chatsRouter = require("./routes/chatsRouter");
-//const personalRouter = require("./routes/personalRouter");
+const personalRouter = require("./routes/personalRouter");
 
 var app = express();
 require("dotenv").config();
@@ -38,29 +39,32 @@ app.use(cors());
 app.use(apiLimiter);
 
 
-
 app.use("/api/admin", adminRouter);
 app.use("/api/auth", authRouter);
 app.use("/accounts", accountsRouter);
 app.use("/groups", groupsRouter);
 app.use("/pendings", pendingsRouter);
 app.use("/messages", chatsRouter);
-//app.use("/personal", require("body-parser").raw(), personalRouter);
+app.use("/personal", require("body-parser").raw(), personalRouter);
+
+app.put('/personal', bodyParser.raw({ inflate: true, limit: '50mb', type: () => true }), async (req, res) => {
+  res.json({ bodySize: req.body.length });
+});
 
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
   // render the error page
-  res.status(err.status || 500).send({message: err.message});
+  res.status(err.status || 500).send({ message: err.message });
   //res.render('error');
 });
 

@@ -4,57 +4,57 @@ const bcrypt = require("bcrypt");
 const dropbox = require("../dropbox");
 
 const sendResponse = (statusCode, body, res) => {
-  res.status(statusCode).send(body);
+	res.status(statusCode).send(body);
 };
 
 module.exports.login = async (req, res, next) => {
-  try {
-    const { username, password } = req.body;
+	try {
+		const { username, password } = req.body;
 
-    const accountData = (await db.collection("accounts").doc(username).get())
-      .data();
+		const accountData = (await db.collection("accounts").doc(username).get())
+			.data();
 
-    if (!accountData) {
-      return sendResponse(422, { message: "username not existed" }, res);
-    }
-    if (! await bcrypt.compare(password, accountData.hashedPassword)) {
-      return sendResponse(422, { message: "password incorrect" }, res);
-    }
+		if (!accountData) {
+			return sendResponse(422, { message: "username not existed" }, res);
+		}
+		if (! await bcrypt.compare(password, accountData.hashedPassword)) {
+			return sendResponse(422, { message: "password incorrect" }, res);
+		}
 
-    // sign token
-    const token = jwt.sign(
-      {
-        username: accountData.username,
-        role: accountData.role,
-        chatAccountId: accountData.chatAccountId
-      },
-      process.env.TOKEN_SECRET,
-      { expiresIn: 60 * 60 * 24 }); // 24 hours
+		// sign token
+		const token = jwt.sign(
+			{
+				username: accountData.username,
+				role: accountData.role,
+				chatAccountId: accountData.chatAccountId
+			},
+			process.env.TOKEN_SECRET,
+			{ expiresIn: 60 * 60 * 24 }); // 24 hours
 
-    // load avatar from dropbox
-    let base64data;
-    await dropbox.loadImageFromId(accountData.avatar)
-      .then(async dropboxRes => {
-        const binary = dropboxRes.result.fileBinary;
-        base64data = Buffer.from(binary, 'binary').toString('base64');
-      })
+		// load avatar from dropbox
+		let base64data;
+		await dropbox.loadImageFromId(accountData.avatar)
+			.then(async dropboxRes => {
+				const binary = dropboxRes.result.fileBinary;
+				base64data = Buffer.from(binary, 'binary').toString('base64');
+			})
 
 
-    res.header("auth-token", token).status(200).send({
-      username: accountData.username,
-      gender: accountData.gender,
-      avatar: base64data,
-      role: accountData.role,
-      firstname: accountData.firstname,
-      lastname: accountData.lastname,
-      email: accountData.email,
-      gender: accountData.gender,
-      phoneNumber: accountData.phoneNumber,
-      token: token,
-    });
-    //console.log(res._header);
+		res.header("auth-token", token).status(200).send({
+			username: accountData.username,
+			gender: accountData.gender,
+			avatar: base64data,
+			role: accountData.role,
+			firstname: accountData.firstname,
+			lastname: accountData.lastname,
+			email: accountData.email,
+			gender: accountData.gender,
+			phoneNumber: accountData.phoneNumber,
+			token: token,
+		});
+		//console.log(res._header);
 
-  } catch (error) {
-    sendResponse(500, { message: error.message }, res);
-  }
+	} catch (error) {
+		sendResponse(500, { message: error.message }, res);
+	}
 };
