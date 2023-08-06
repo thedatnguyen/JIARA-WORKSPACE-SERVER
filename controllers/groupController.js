@@ -512,8 +512,9 @@ module.exports.deleteComment = async (req, res, next) => {
     try {
         const { username, groupRole } = res.locals;
         const { commentId } = req.body;
-        console.log(req);
+        console.log(req.body);
         const commentRef = db.collection('comments').doc(commentId);
+        console.log('aaa');
         const commentData = (await commentRef.get()).data();
         
         console.log(commentId);
