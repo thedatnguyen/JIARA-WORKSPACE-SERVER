@@ -75,3 +75,14 @@ module.exports.uploadImage = async (content) => {
         contents: content
     })
 }
+
+module.exports.deleteImageById = async (id) => {
+    let dropboxAccessToken;
+    await this.getAccessToken()
+        .then(dropboxRes => dropboxAccessToken = dropboxRes.data.access_token);
+
+    var dbx = new Dropbox({ accessToken: dropboxAccessToken });
+    return await dbx.filesDeleteV2({
+        path: id
+    })
+}

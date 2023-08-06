@@ -278,7 +278,6 @@ module.exports.createNewPost = async (req, res, next) => {
         // upload pictures to dropbox
         const postPictureIds = [];
         const { pictures } = post; // receive array of base64 picture
-        console.log(pictures);
         if (!Array.isArray(pictures)) pictures = [pictures]; // convert to array if neccessary
         await Promise.all(
             pictures.map(async picture => {
@@ -416,6 +415,17 @@ module.exports.deletePost = async (req, res, next) => {
         groupRef.update({ postIds: postIdsUpdate });
 
         sendResponse(204, {}, res);
+
+        // delete relavant image on dropbox
+        const { pictures } = postData;
+        Promise.allSettled(
+            pictures.map(pictureId => {
+                dropbox.deleteImageById(pictureId);
+            })
+        )
+            .catch(err => {
+                return;
+            })
     } catch (error) {
         sendResponse(500, { message: error.message }, res);
     }
@@ -501,11 +511,11 @@ module.exports.editComment = async (req, res, next) => {
 module.exports.deleteComment = async (req, res, next) => {
     try {
         const { username, groupRole } = res.locals;
-        const comment = req.body;
-        const commentId = comment.commentId;
+        const { commentId } = req.body;
 
         const commentRef = db.collection('comments').doc(commentId);
-        const commentData = (await commentRef.get()).data()
+        const commentData = (await commentRef.get()).data();
+        console.log(req);
         console.log(commentId);
         console.log(username);
         console.log(commentData);
@@ -513,6 +523,7 @@ module.exports.deleteComment = async (req, res, next) => {
             return sendResponse(422, { message: 'author or manager required' }, res);
         }
 
+        // update commentIds in post
         const { postId } = req.params;
         const postRef = db.collection('posts').doc(postId);
         const comments = (await postRef.get()).data()

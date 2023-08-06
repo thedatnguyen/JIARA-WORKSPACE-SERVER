@@ -46,3 +46,20 @@ module.exports.changePassword = async (req, res, next) => {
         res.status(500).send({ message: error.message });
     }
 }
+
+module.exports.forgetPassword = async (req, res, next) => {
+    try {
+        const { email, username } = req.body;
+        const account = await db.collection('accounts').doc(username).get();
+        const accountData = account.data();
+        if(!accountData) {
+            return res.status(422).send({message: 'username does not exist!'});
+        }
+        if(accountData.email !== email){
+            return res.status(422).send({message: 'email incorrect!'});
+        }
+        next();
+    } catch (error) {
+        return res.status(500).send({ message: error.message });
+    }
+}

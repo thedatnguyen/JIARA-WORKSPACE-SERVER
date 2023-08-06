@@ -10,9 +10,10 @@ const generateEmailText = (username) => {
             role: 'user'
         },
         process.env.TOKEN_SECRET,
-        { expiresIn: 60 }); // 1 minute 
-    return `Click http://127.0.0.1:5001/verify/${token} to verify your email. Token is just valid for 1 minute.`;
+        { expiresIn: 60 * 10 }); // 10 minute 
+    return `Click http://127.0.0.1:5001/verify/${token} to verify your email. Token is just valid for 10 minutes.`;
 }
+
 // after validate, send verify email
 module.exports = async (req, res, next) => {
     try {
