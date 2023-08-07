@@ -11,8 +11,8 @@ module.exports.login = async (req, res, next) => {
 	try {
 		const { username, password } = req.body;
 
-		const accountData = (await db.collection("accounts").doc(username).get())
-			.data();
+		const accountRef = db.collection("accounts").doc(username)
+		const accountData = (await accountRef.get()).data();
 
 		if (!accountData) {
 			return sendResponse(422, { message: "username not existed" }, res);
@@ -31,19 +31,12 @@ module.exports.login = async (req, res, next) => {
 			process.env.TOKEN_SECRET,
 			{ expiresIn: 60 * 60 * 24 }); // 24 hours
 
-		// load avatar from dropbox
-		let base64data;
-		await dropbox.loadImageFromId(accountData.avatar)
-			.then(async dropboxRes => {
-				const binary = dropboxRes.result.fileBinary;
-				base64data = Buffer.from(binary, 'binary').toString('base64');
-			})
-
-
 		res.header("auth-token", token).status(200).send({
+			avatar: accountData.avatar,
 			username: accountData.username,
 			gender: accountData.gender,
-			avatar: base64data,
+			avatar: accountData.avatar,
+			avatarUrl: accountData.avatarUrl,
 			role: accountData.role,
 			firstname: accountData.firstname,
 			lastname: accountData.lastname,
@@ -55,6 +48,7 @@ module.exports.login = async (req, res, next) => {
 		//console.log(res._header);
 
 	} catch (error) {
+		
 		sendResponse(500, { message: error.message }, res);
 	}
 };

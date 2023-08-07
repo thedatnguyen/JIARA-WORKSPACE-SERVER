@@ -74,5 +74,18 @@ module.exports.getLastMessage = (chatId) => {
     return result;
 }
 
+module.exports.changeChatAvatar = async (id, avatarUrl) => {
+    const url = `https://f1746aae94594612865d8f61eb9291e7.weavy.io/api/users/${id}`;
+    const body = {
+        picture: avatarUrl
+    }
+    const configs = {
+        headers: {
+            Authorization: process.env.WEAVY_TOKEN_FACTORY,
+            'content-type': 'application/json'
+        }
+    }
+    await axios.patch(url, body, configs);
+}
 
 

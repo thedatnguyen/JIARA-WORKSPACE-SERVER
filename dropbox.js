@@ -1,5 +1,7 @@
 const axios = require('axios');
 const { Dropbox } = require('dropbox');
+const { link } = require('joi');
+const { promises } = require('nodemailer/lib/xoauth2');
 const { v4: uuid } = require('uuid');
 
 module.exports.getRefreshAndAccessToken = async (req, res, next) => {
@@ -85,4 +87,46 @@ module.exports.deleteImageById = async (id) => {
     return await dbx.filesDeleteV2({
         path: id
     })
+}
+
+module.exports.getSharedLink = async (id) => {
+    let dropboxAccessToken;
+    await this.getAccessToken()
+        .then(dropboxRes => dropboxAccessToken = dropboxRes.data.access_token);
+
+    const url = "https://api.dropboxapi.com/2/sharing/list_shared_links";
+    const body = {
+        path: id
+    }
+    const configs = {
+        headers: {
+            Authorization: `Bearer ${dropboxAccessToken}`
+        }
+    }
+    return await axios.post(url, body, configs)
+}
+
+module.exports.createSharedLink = async (id) => {
+    let dropboxAccessToken;
+    await this.getAccessToken()
+        .then(dropboxRes => dropboxAccessToken = dropboxRes.data.access_token);
+
+    const url = "https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings";
+    const body = {
+        path: id,
+        settings: {
+            access: "viewer",
+            allow_download: true,
+            audience: "public",
+            requested_visibility: "public"
+        }
+    }
+    const configs = {
+        headers: {
+            Authorization: `Bearer ${dropboxAccessToken}`,
+            'Content-Type': 'application/json'
+        }
+    }
+
+    return await axios.post(url, body, configs);
 }

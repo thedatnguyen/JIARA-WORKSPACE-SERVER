@@ -52,6 +52,7 @@ app.put('/personal', bodyParser.raw({ inflate: true, limit: '50mb', type: () => 
 });
 
 
+
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));
@@ -67,5 +68,7 @@ app.use(function (err, req, res, next) {
   res.status(err.status || 500).send({ message: err.message });
   //res.render('error');
 });
+
+global.__path_default_avatar = `${__dirname}/public/images/default-avatar.png`;
 
 module.exports = app;

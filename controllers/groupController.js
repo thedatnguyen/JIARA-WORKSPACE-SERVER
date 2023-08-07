@@ -277,14 +277,23 @@ module.exports.createNewPost = async (req, res, next) => {
 
         // upload pictures to dropbox
         const postPictureIds = [];
+        const postPictureUrls = [];
         const { pictures } = post; // receive array of base64 picture
         if (!Array.isArray(pictures)) pictures = [pictures]; // convert to array if neccessary
         await Promise.all(
             pictures.map(async picture => {
                 const imageBuffer = Buffer.from(picture, 'base64');
-                await dropbox.uploadImage(imageBuffer)
+                let id;
+                await dropbox.uploadImage(imageBuffer) // upload image and get id then save to post
                     .then(dropboxRes => {
-                        postPictureIds.push(dropboxRes.result.id);
+                        id = dropboxRes.result.id;
+                        postPictureIds.push(id);
+                    })
+                    .then(async () => { // get pictures url
+                        await dropbox.createSharedLink(id)
+                            .then(dropboxRes => {
+                                postPictureUrls.push(dropboxRes.data.url.replace('www.dropbox', 'dl.dropboxusercontent'));
+                            })
                     })
             })
         )
@@ -298,6 +307,7 @@ module.exports.createNewPost = async (req, res, next) => {
         post.username = username;
         post.comments = [];
         post.pictures = postPictureIds;
+        post.pictureUrls = postPictureUrls;
 
         const message = post.approve ? 'Post created successfully' : 'Post created successfully, waiting for managers to appove...';
 
@@ -335,20 +345,6 @@ module.exports.getPostById = async (req, res, next) => {
         )
 
         postData.comments = comments;
-
-        // load image
-        let pictures = [];
-        await Promise.all(
-            postData.pictures.map(async pictureId => {
-                await dropbox.loadImageFromId(pictureId)
-                    .then(dropboxRes => {
-                        const binaryPicture = dropboxRes.result.fileBinary;
-                        const base64Image = Buffer.from(binaryPicture, 'binary').toString('base64');
-                        pictures.push(base64Image);
-                    })
-            })
-        )
-        postData.pictures = pictures;
 
         sendResponse(200, { postData }, res);
     } catch (error) {
@@ -512,14 +508,9 @@ module.exports.deleteComment = async (req, res, next) => {
     try {
         const { username, groupRole } = res.locals;
         const { commentId } = req.body;
-        console.log(req.body);
         const commentRef = db.collection('comments').doc(commentId);
-        console.log('aaa');
         const commentData = (await commentRef.get()).data();
-        
-        console.log(commentId);
-        console.log(username);
-        console.log(commentData);
+
         if (commentData.username !== username && groupRole !== 'manager') {
             return sendResponse(422, { message: 'author or manager required' }, res);
         }

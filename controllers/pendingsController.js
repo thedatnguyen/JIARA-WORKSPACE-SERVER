@@ -1,6 +1,8 @@
 const { db } = require('../configs/firebase');
 const sendResponse = (statusCode, data, res) => res.status(statusCode).send(data);
 const weavy = require('../weavy');
+const dropbox = require('../dropbox');
+const fs = require('fs');
 
 module.exports.getPendings = async (req, res, next) => {
     try {
@@ -40,11 +42,24 @@ module.exports.approvePending = async (req, res, next) => {
                 chatAccountId = weavyResponse.data.id;
             })
 
+        // create default avatar for user
+        let avatarId, avatarUrl;
+        const avatarBuffer = fs.readFileSync(global.__path_default_avatar);
+        await dropbox.uploadImage(avatarBuffer)
+            .then(dropboxRes => avatarId = dropboxRes.result.id)
+            .then(async () => {
+                await dropbox.createSharedLink(avatarId)
+                    .then(dropboxRes => {
+                        avatarUrl = dropboxRes.data.url.replace('www.dropbox', 'dl.dropboxusercontent');
+                    })
+            })
+
         const accountData = {
             username,
             firstname,
             lastname,
-            avatar,
+            avatar: avatarId,
+            avatarUrl: avatarUrl,
             phoneNumber,
             email,
             gender,
@@ -58,9 +73,10 @@ module.exports.approvePending = async (req, res, next) => {
             db.collection('accounts').doc(username).set(accountData),
             db.collection('pendings').doc(username).delete()
         ])
-            .then(() => sendResponse(200, { status: 'success', data: `${pending.username} approved`}, res))
+            .then(() => sendResponse(200, { status: 'success', data: `${pending.username} approved` }, res))
             .catch(err => sendResponse(500, { status: 'failed', message: err.message }, res));
     } catch (error) {
+        console.log(error);
         sendResponse(500, { status: 'failed', message: error.message }, res);
     }
 }
@@ -80,6 +96,7 @@ module.exports.rejectPending = async (req, res, next) => {
             .then(() => sendResponse(200, { status: 'success', data: `${pending.username} rejected` }, res))
             .catch(err => sendResponse(500, { status: 'failed', message: err.message }, res));
     } catch (error) {
+        console.log(error);
         sendResponse(500, { status: 'failed', message: error.message }, res);
     }
 }
