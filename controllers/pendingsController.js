@@ -33,7 +33,7 @@ module.exports.approvePending = async (req, res, next) => {
             return sendResponse(400, { status: 'failed', message: 'bad request, username does not exist' });
         }
 
-        const { firstname, lastname, avatar, phoneNumber, email, gender, hashedPassword } = pending
+        const { firstname, lastname, phoneNumber, email, gender, hashedPassword } = pending
 
         // create chat account for user
         let chatAccountId;
